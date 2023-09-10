@@ -1,0 +1,39 @@
+import gym
+import numpy as np
+from env.custom_hopper import *
+from stable_baselines3 import PPO
+from stable_baselines3.common.evaluation import evaluate_policy
+from stable_baselines3.common.callbacks import EvalCallback, CallbackList, CheckpointCallback
+
+env_s = gym.make('CustomHopper-source-v0')  # [2.53429174 3.92699082 2.71433605 5.0893801 ]
+env_t = gym.make('CustomHopper-target-v0')  # [3.53429174 3.92699082 2.71433605 5.0893801 ]
+
+#Training the model (source)
+model = PPO('MlpPolicy', n_steps=2048, batch_size=64, learning_rate=0.00025, env=env_s, verbose=1, device='cpu', tensorboard_log="./ppo_train_tensorboard")
+
+checkpoint_callback = CheckpointCallback(save_freq=int(np.ceil(1e7 / 12)), save_path='./', name_prefix="model_source_")
+target_eval_callback = EvalCallback(eval_env=env_t, n_eval_episodes=50, eval_freq=15000) # evaluation of target during training
+callback_list = [checkpoint_callback, target_eval_callback]
+source_eval_callback = EvalCallback(eval_env=env_s, n_eval_episodes=50, eval_freq=15000) # if we are training in source, evaluate also in source
+callback_list.append(source_eval_callback)
+callback = CallbackList(callback_list)
+
+model.learn(total_timesteps=int(3e6), callback=callback)
+#model.save("ppo_model_source")
+
+#Training the model (target)
+model = PPO('MlpPolicy', n_steps=2048, batch_size=64, learning_rate=0.00025, env=env_t, verbose=1, device='cpu', tensorboard_log="./ppo_train_tensorboard")
+
+checkpoint_callback = CheckpointCallback(save_freq=int(np.ceil(1e7 / 12)), save_path='./', name_prefix="model_target_")
+target_eval_callback = EvalCallback(eval_env=env_t, n_eval_episodes=50, eval_freq=15000) # evaluation of target during training
+callback_list = [checkpoint_callback, target_eval_callback]
+
+
+callback = CallbackList(callback_list)
+
+model.learn(total_timesteps=int(3e6), callback=callback)
+#model.save("ppo_model_target")
+
+!tensorboard dev upload --logdir ppo_train_tensorboard \
+    --name "PPO test results" \
+    --description "Reward behaviour during the model training"
