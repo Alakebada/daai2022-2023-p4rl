@@ -1,0 +1,18 @@
+# Testing different hyperparameters
+
+l_rate = [3e-4, 2.5e-4, 1e-3]
+b_size = [64, 128]
+step = [1024, 2048]
+vec_env = env_s
+mean_reward_grid_1024 = [[0,0,0],[0,0,0]]
+mean_reward_grid_2048 = [[0,0,0],[0,0,0]]
+
+for i in range(len(l_rate)):
+  for j in range(len(b_size)):
+    for k in range(len(step)):
+      model = PPO('MlpPolicy', n_steps=step[k], batch_size=b_size[j], learning_rate=l_rate[i], env=env_s, verbose=1, device='cpu', tensorboard_log="./ppo_train_tensorboard")
+      model.learn(total_timesteps=int(2e5))
+      if step[k] == 1024:
+        mean_reward_grid_1024[j][i], std_reward = evaluate_policy(model, vec_env, n_eval_episodes=50)
+      else:
+        mean_reward_grid_2048[j][i], std_reward = evaluate_policy(model, vec_env, n_eval_episodes=50)
