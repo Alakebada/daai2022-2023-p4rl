@@ -1,0 +1,30 @@
+import gym
+import numpy as np
+from env.custom_hopper import *
+from stable_baselines3 import PPO
+from stable_baselines3.common.evaluation import evaluate_policy
+from stable_baselines3.common.callbacks import EvalCallback, CallbackList, CheckpointCallback
+
+#manually change the thigh_hw, leg_hw and foot_hw to test different distributions
+params = {
+			'thigh_mean': 3.92699082,
+			'leg_mean': 2.71433605,
+			'foot_mean': 5.0893801,
+			'hw': 0.5,
+			'thigh_hw': 0.75,
+			'leg_hw': 0.75,
+			'foot_hw': 0.5
+			}
+bounds = list((m-hw, m+hw) for m, hw in [(params['thigh_mean'], params['thigh_hw']), (params['leg_mean'], params['leg_hw']), (params['foot_mean'], params['foot_hw'])]) # Compute bounds
+
+target_env = gym.make('CustomHopper-target-v0')
+source_env = gym.make('CustomHopper-source-randomized-v0')
+source_env.set_bounds(bounds)
+
+target_eval_callback = EvalCallback(eval_env=target_env, n_eval_episodes=50, eval_freq=15000) # evaluation of target during training (to do indipendently of the train env)
+cb_list = [target_eval_callback]
+callback = CallbackList(cb_list)
+
+model = PPO("MlpPolicy", env=source_env, n_steps=2048, batch_size=64, learning_rate=0.00025, device='cpu', verbose=1) #, tensorboard_log="./UDR_tensorboard/")
+model.learn(total_timesteps=2e5, callback=callback)
+model.save("UDR_model_5e6")
