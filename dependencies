@@ -1,0 +1,15 @@
+!apt-get update
+!apt-get install -y \
+    libgl1-mesa-dev \
+    libgl1-mesa-glx \
+    libglew-dev \
+    libosmesa6-dev \
+    software-properties-common
+
+!apt-get install -y patchelf
+
+!pip install gym[mujoco]
+!pip install free-mujoco-py
+!pip install stable-baselines3
+!pip install shimmy
+!pip install -U tensorboard
