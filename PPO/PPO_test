@@ -1,0 +1,10 @@
+# Load the trained agent (choose source or target)
+#!unzip ppo_model_source.zip
+#!unzip ppo_model_target.zip
+#model = PPO.load("ppo_model_source")
+#model = PPO.load("ppo_model_target")
+
+# Evaluate the agent
+vec_env = env_s               #env_t to test on the target environment
+mean_reward, std_reward = evaluate_policy(model, vec_env, n_eval_episodes=50)
+print('Average return:', mean_reward)  # state-space
